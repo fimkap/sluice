@@ -1,0 +1,22 @@
+# build output
+/bin/
+/dist/
+*.test
+*.out
+coverage.*
+
+# local data and experiment scratch
+/data/
+/tmp/
+bench-results/
+
+# terraform
+deploy/terraform/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+.DS_Store
+.env
+.env.*
