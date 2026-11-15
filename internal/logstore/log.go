@@ -607,3 +607,36 @@ func (l *Log) Remove() error {
 	l.Close()
 	return os.RemoveAll(filepath.Clean(l.dir))
 }
+
+// ResetTo discards the whole log and starts it again, empty, at offset. A follower uses it when its log
+// ends before the leader's log start.
+func (l *Log) ResetTo(offset int64) error {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.closed {
+		return ErrClosed
+	}
+	for _, s := range l.segments {
+		s.remove()
+	}
+	s, err := createSegment(l.dir, offset)
+	if err != nil {
+		return err
+	}
+	syncDir(l.dir)
+	l.segments = []*segment{s}
+	l.leo = Position{Offset: offset, Segment: offset}
+	l.durMu.Lock()
+	l.durable = l.leo
+	close(l.durCh)
+	l.durCh = make(chan struct{})
+	l.durMu.Unlock()
+	return nil
+}
+
+// ActiveBase is the base offset of the active segment.
+func (l *Log) ActiveBase() int64 {
+	l.mu.RLock()
+	defer l.mu.RUnlock()
+	return l.active().base
+}
