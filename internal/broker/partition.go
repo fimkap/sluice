@@ -106,7 +106,9 @@ func (p *partition) registerMetrics() {
 	r, lbl := p.b.registry, []string{"partition", p.key}
 	r.GaugeFunc("sluice_partition_high_watermark", "High watermark.", func() float64 { return float64(p.highWatermark().Offset) }, lbl...)
 	r.GaugeFunc("sluice_partition_log_end_offset", "Log end offset.", func() float64 { return float64(p.log.LEO().Offset) }, lbl...)
-	r.GaugeFunc("sluice_partition_isr_size", "In-sync replicas (leader's view).", func() float64 { return float64(len(p.isrSnapshot())) }, lbl...)
+	if p.isLeader() { // only the leader knows the ISR
+		r.GaugeFunc("sluice_partition_isr_size", "In-sync replicas (leader's view).", func() float64 { return float64(len(p.isrSnapshot())) }, lbl...)
+	}
 	r.GaugeFunc("sluice_log_fsyncs_total", "fsync calls on the partition log.", func() float64 { return float64(p.log.Stats().Fsyncs) }, lbl...)
 	r.GaugeFunc("sluice_log_appends_total", "Batches appended to the partition log.", func() float64 { return float64(p.log.Stats().Appends) }, lbl...)
 }
