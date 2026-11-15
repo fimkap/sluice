@@ -1,0 +1,7 @@
+.git
+bin
+data
+bench-results
+deploy/terraform/.terraform
+*.test
+.claude

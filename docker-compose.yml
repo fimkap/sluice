@@ -1,0 +1,46 @@
+# Three brokers on one Docker network. Clients run inside the network too:
+#   docker compose up -d
+#   docker compose run --rm cli create-topic -topic orders -partitions 3 -rf 3
+#   docker compose run --rm cli topics
+x-broker: &broker
+  build: .
+  image: sluice:dev
+  restart: unless-stopped
+  environment:
+    GOMAXPROCS: "2"
+
+services:
+  sluice-1:
+    <<: *broker
+    hostname: sluice-1
+    command: ["--node-id=1", "--data-dir=/data", "--peers=1=sluice-1:9092,2=sluice-2:9092,3=sluice-3:9092", "--min-insync=2"]
+    ports: ["9100:9100"]
+    volumes: ["data-1:/data"]
+  sluice-2:
+    <<: *broker
+    hostname: sluice-2
+    command: ["--node-id=2", "--data-dir=/data", "--peers=1=sluice-1:9092,2=sluice-2:9092,3=sluice-3:9092", "--min-insync=2"]
+    ports: ["9101:9100"]
+    volumes: ["data-2:/data"]
+  sluice-3:
+    <<: *broker
+    hostname: sluice-3
+    command: ["--node-id=3", "--data-dir=/data", "--peers=1=sluice-1:9092,2=sluice-2:9092,3=sluice-3:9092", "--min-insync=2"]
+    ports: ["9102:9100"]
+    volumes: ["data-3:/data"]
+
+  cli:
+    image: sluice:dev
+    profiles: ["tools"]
+    entrypoint: ["/sluicectl"]
+    environment:
+      SLUICE_BOOTSTRAP: "sluice-1:9092,sluice-2:9092,sluice-3:9092"
+    depends_on:
+      sluice-1: { condition: service_healthy }
+      sluice-2: { condition: service_healthy }
+      sluice-3: { condition: service_healthy }
+
+volumes:
+  data-1:
+  data-2:
+  data-3:
