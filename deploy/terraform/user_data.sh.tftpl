@@ -1,0 +1,33 @@
+#!/bin/bash
+# Boot script for a sluice broker on Amazon Linux 2023 (arm64).
+set -euo pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+
+# The data volume is attached after boot; on Nitro it shows up as an NVMe device named after its id.
+dev=""
+for _ in $(seq 1 120); do
+  dev=$(readlink -f /dev/disk/by-id/nvme-Amazon_Elastic_Block_Store_${volume_id} 2>/dev/null || true)
+  [ -b "$dev" ] && break
+  sleep 5
+done
+[ -b "$dev" ] || { echo "data volume ${volume_id} never appeared" >&2; exit 1; }
+blkid "$dev" >/dev/null || mkfs.xfs "$dev"
+mkdir -p /var/lib/sluice
+uuid=$(blkid -s UUID -o value "$dev")
+grep -q "$uuid" /etc/fstab || echo "UUID=$uuid /var/lib/sluice xfs defaults,noatime,nofail 0 2" >> /etc/fstab
+mount -a
+chown 65532:65532 /var/lib/sluice   # the image runs as distroless "nonroot"
+
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registry}
+docker run -d --name sluice --restart always --network host \
+  -v /var/lib/sluice:/data \
+  --log-driver awslogs \
+  --log-opt awslogs-region=${region} \
+  --log-opt awslogs-group=${log_group} \
+  --log-opt awslogs-stream=broker-${node_id} \
+  ${image} \
+  --node-id=${node_id} --data-dir=/data --listen=:9092 --http=:9100 \
+  --advertise=${private_ip}:9092 --peers=${peers} \
+  --fsync=${fsync} --commit-rule=${commit_rule} --min-insync=${min_insync}

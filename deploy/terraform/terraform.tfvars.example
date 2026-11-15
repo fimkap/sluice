@@ -1,0 +1,6 @@
+region       = "eu-central-1"
+broker_count = 3
+fsync        = "group"
+commit_rule  = "isr"
+min_insync   = 2
+image_tag    = "latest"
