@@ -5,9 +5,6 @@ measure: segmented logs with crash recovery, replication under Kafka's ISR rule 
 quorum, consumer groups, and share groups, Kafka 4.2's queue semantics on a log. Four experiments put
 numbers on the trade-offs every log-based system makes.
 
-It was built with an AI coding agent, starting from a spec written before any code.
-[docs/ai-workflow.md](docs/ai-workflow.md) describes the setup and what the tests caught.
-
 | Question | What the experiments found (Linux, 4 vCPUs) |
 |----------|---------------------------------------------|
 | [What does durability cost?](#e1-what-does-durability-cost) | An fsync per write gave 2.3–3k records/s. Group commit gave 56k with 64 producers, and every write was still on disk before its ack. |
@@ -212,18 +209,18 @@ These are deliberate, to keep the code readable:
 
 `docs/design.md` describes what failover would need.
 
-## Working with AI
+## How it was built
 
-[AGENTS.md](AGENTS.md) is the brief any coding agent reads: the package map, the commands and the
-invariants. [CLAUDE.md](CLAUDE.md) adds Claude Code specifics. In [.claude/](.claude) you'll find:
+I chose the problem, a Kafka-style broker that compares approaches and measures them, and the constraints:
+measured, run in Docker, and deployable to AWS. Claude Code drafted the spec and wrote the code in steps.
+[docs/ai-workflow.md](docs/ai-workflow.md) shows what kept that work checkable:
 
-- permissions that deny pushes and `terraform apply`;
-- a formatting hook;
-- skills for running experiments and adding protocol APIs;
-- a subagent that reviews storage changes for crash-consistency bugs.
+- the invariants in [AGENTS.md](AGENTS.md);
+- the guardrails in [.claude/](.claude);
+- the tests and experiments above.
 
-[docs/ai-workflow.md](docs/ai-workflow.md) explains how these fit together and lists the bugs the checks
-caught.
+It also lists what the checks caught, such as a rebalance bug that handed one partition to two consumers at
+once.
 
 ## Layout
 

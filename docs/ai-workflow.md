@@ -1,9 +1,10 @@
-# How this repository was built with an AI agent
+# How sluice was built with an AI agent
 
-sluice was built with [Claude Code](https://claude.com/claude-code), Anthropic's coding agent, working
-from a short brief: a Kafka-like broker that compares approaches and measures them, runs in Docker and
-deploys to AWS. This page shows the setup that kept the agent on track and what the checks caught. The
-setup is in the repository, so anyone can reuse it.
+I chose the problem: a Kafka-style broker that compares the approaches log-based systems take and measures
+each one. I also set the constraints: run in Docker and deploy to AWS.
+[Claude Code](https://claude.com/claude-code) drafted the spec and wrote the code in small steps. This page
+describes what kept that work checkable, and what the checks caught. The setup is in the repository, so
+anyone can reuse it.
 
 ## 1. Context before code
 
@@ -59,11 +60,12 @@ These are real issues from this repository's history:
 | Running the cluster in compose | Followers exported an ISR size of 0 for partitions they don't lead, which read like an outage. | Only the leader exports the gauge. |
 | A storage test | The test expected at least 10 segments; the data only fills 9 of that size. | The test was wrong, and the commit says why. |
 
-## 6. What stays with a person
+## 6. What I own
 
-The agent wrote and tested the code. A person still owns the decisions the tests can't make:
-
-- which semantics to choose (the ISR rule's `MinInsync` check after the append, at-least-once share groups);
-- whether a measurement is meaningful (loopback understates the value of zero-copy; Docker Desktop's
-  virtual disk makes fsync cheaper than real hardware);
-- what to leave out (failover, TLS, compression), stated plainly under "Limits" in the README.
+- **The semantics:** the ISR rule's `MinInsync` check after the append, and at-least-once delivery in share
+  groups.
+- **Whether a measurement means what it seems to.** Loopback understates the value of zero-copy, and Docker
+  Desktop's virtual disk makes fsync cheaper than real hardware does.
+- **What to leave out:** failover, TLS and compression, stated plainly under "Limits" in the README.
+- **The review.** Checking the code against the spec is my job, and what I can explain line by line is the
+  measure of what I present.
