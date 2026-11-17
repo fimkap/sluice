@@ -1,10 +1,10 @@
 # How sluice was built with an AI agent
 
 I chose the problem: a Kafka-style broker that compares the approaches log-based systems take and measures
-each one. I also set the constraints: run in Docker and deploy to AWS.
-[Claude Code](https://claude.com/claude-code) drafted the spec and wrote the code in small steps. This page
-describes what kept that work checkable, and what the checks caught. The setup is in the repository, so
-anyone can reuse it.
+each one. I also set the constraints: run in Docker and deploy to AWS. The spec in [`design.md`](design.md)
+came first, and [Claude Code](https://claude.com/claude-code) then wrote the code against it in small steps.
+This page describes what kept that work checkable, and what the checks caught. The setup is in the
+repository, so anyone can reuse it.
 
 ## 1. Context before code
 

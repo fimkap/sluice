@@ -212,8 +212,9 @@ These are deliberate, to keep the code readable:
 ## How it was built
 
 I chose the problem, a Kafka-style broker that compares approaches and measures them, and the constraints:
-measured, run in Docker, and deployable to AWS. Claude Code drafted the spec and wrote the code in steps.
-[docs/ai-workflow.md](docs/ai-workflow.md) shows what kept that work checkable:
+measured, run in Docker, and deployable to AWS. The spec in [docs/design.md](docs/design.md) came first, and
+Claude Code then wrote the code against it in small steps. [docs/ai-workflow.md](docs/ai-workflow.md) shows
+what kept that work checkable:
 
 - the invariants in [AGENTS.md](AGENTS.md);
 - the guardrails in [.claude/](.claude);
